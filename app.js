@@ -1,40 +1,20 @@
 const http = require('http')
-const fs = require('fs')
+const express = require('express')
+const app = express();
+const adminRoutes = require('./routes/admin')
+const shopRoutes = require('./routes/shop')
+const bodyParser = require('body-parser')
+const path = require("path");
 
-const server = http.createServer((req, res) => {
-    const url = req.url;
-    const method = req.method;
-    if (url === '/') {
-        res.write('<html>')
-        res.write('<head><title>Enter Message</title><head>')
-        res.write('<body><form action="/message" method="POST"><input type="text" name="message"></form></body>')
-        res.write('</html>')
-        return res.end();
-    }
+app.use(bodyParser.urlencoded({extends: false}));////클라이언트로부터 받은 http 요청 메시지 형식에서 body 데이터를 해석하기 위해서 처리가 필요함
+
+app.use('/admin',adminRoutes)
+app.use(shopRoutes)
 
 
-    if (url === '/message' && method === 'POST') {
-        const body = [];
-        req.on('data', (chunk) => {
-            console.log(chunk)
-            body.push(chunk);
-        })
-       return  req.on('end', () => {
-            const parsedBody = Buffer.concat(body).toString()
-            const message = parsedBody.split('=')[1]
-
-            fs.writeFileSync('message.txt', req.url)
-            res.statusCode = 302;
-            res.setHeader('Location', '/')
-            return res.end();
-        })
-    }
-    res.setHeader('content-type', 'text/html')
-    res.write('<html>');
-    res.write('<body>')
-    res.write('<h4>testpage<h4>');
-    res.write('</body>')
-    res.write('</html>');
-    res.end()
+app.use((req, res, next) => {
+    const presentPage = (req.url).slice(1)
+    console.log(presentPage)
+    res.status(404).sendFile(path.join(__dirname,'views','404.html'))
 })
-server.listen(16500);
+app.listen(16500);
